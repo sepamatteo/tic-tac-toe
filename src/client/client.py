@@ -144,7 +144,6 @@ class Example(QWidget):
             )
             cur.execute(statement)
             conn.commit()
-            print("table created")
         except mariadb.Error as e:
             print(f"Error creating table: {e}")
             sys.exit(1)
