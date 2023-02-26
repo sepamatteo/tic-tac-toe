@@ -123,6 +123,34 @@ class Example(QWidget):
         grid.addWidget(self.player_won_label, self.game_size + 1, 2)
         self.player_won_label.setAlignment(Qt.AlignCenter)
 
+    # method that initialises the database
+    def initDatabase(self):
+        
+        # Connect to MariaDB Platform
+        conn = mariadb.connect(
+            user="tictactoeuser",
+            password="password",
+            host="localhost",
+            database="tictactoe")
+        cur = conn.cursor()
+
+        try:
+            statement = ("CREATE TABLE IF NOT EXISTS results ("
+            "gameID INT NOT NULL AUTO_INCREMENT PRIMARY KEY,"
+            "p1_score INT(25),"
+            "p2_score INT(25),"
+            "date DATE"
+            ");"
+            )
+            cur.execute(statement)
+            conn.commit()
+            print("table created")
+        except mariadb.Error as e:
+            print(f"Error creating table: {e}")
+            sys.exit(1)
+        
+        conn.close()
+    
     # method that writes the game results into a SQL database
     def writeToDbServer(self, p1_score, p2_score):
 
@@ -228,6 +256,7 @@ class Example(QWidget):
 def main():
     app = QApplication([])
     ex = Example()
+    ex.initDatabase()
     ex.show()
     sys.exit(app.exec_())
 
