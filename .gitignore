@@ -1,1 +1,3 @@
 .vscode
+src/client/__pycache__
+src/server/__pycache__
