@@ -16,8 +16,11 @@ import mariadb
 from datetime import datetime
 
 
+
 class SocketChat:
+    """Classe che gestisce la connessione al socket"""
     def __init__(self):
+        """Metodo che inizializza la connessione"""
         self.nickname = ""
         # Server Ip and Port
         self.IP = "127.0.0.1"
@@ -27,6 +30,7 @@ class SocketChat:
         )
 
     def receive(self):
+        """Metodo che riceve il messaggio dal server"""
         message = self.client_socket.recv(1024).decode("utf-8")
         return message
 
@@ -41,8 +45,8 @@ class SocketChat:
             return 404  # status code for exit
 
 
-class Example(QWidget):
-
+class Game(QWidget):
+    """Classe che contiene la logica di gioco"""
     winning_states = [
         [(0, 0), (0, 1), (0, 2)],
         [(1, 0), (1, 1), (1, 2)],
@@ -73,6 +77,7 @@ class Example(QWidget):
             self.otherPalyerTurn()
 
     def initUI(self):
+        """Metodo che inizializza l'interfaccia grafica"""
         self.game_size = 3
         self.buttons = [
             [],
@@ -125,7 +130,7 @@ class Example(QWidget):
 
     # method that initialises the database
     def initDatabase(self):
-        
+        """Metodo che inizializza la connessione al database"""
         # Connect to MariaDB Platform
         conn = mariadb.connect(
             user="tictactoeuser",
@@ -152,7 +157,7 @@ class Example(QWidget):
     
     # method that writes the game results into a SQL database
     def writeToDbServer(self, p1_score, p2_score):
-
+        """Metodo che scrive i dati nel database"""
         date = datetime.today().strftime("%Y-%m-%d")  # gets game date
 
         # Connect to MariaDB Platform
@@ -182,14 +187,16 @@ class Example(QWidget):
 
     # method that starts a new game
     def newGame(self):
+        """Metodo che fa iniziare una nuova partita"""
         for row in self.buttons:
             for btn in row:
                 btn.setText("")
 
     # method that checks game state
     def checkGame(self):
+        """Metodo che controlla lo stato della partita"""
         win = ""
-        for win_state in Example.winning_states:
+        for win_state in Game.winning_states:
             i, j = win_state[0]
             state = self.buttons[i][j].text()
             if state == "":
@@ -229,6 +236,7 @@ class Example(QWidget):
         threading.Thread(target=self._otherPalyerTurn).start()
 
     def toggle_turn(self):
+        """Metodo che alterna i turni durante la partita"""
         if self.turn == "x":
             self.turn = "o"
         else:
@@ -253,10 +261,11 @@ class Example(QWidget):
 
 
 def main():
+    """Main"""
     app = QApplication([])
-    ex = Example()
-    ex.initDatabase()
-    ex.show()
+    game = Game()
+    game.initDatabase()
+    game.show()
     sys.exit(app.exec_())
 
 

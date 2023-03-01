@@ -1,0 +1,171 @@
+
+<!DOCTYPE html>
+
+<html lang="it">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>server.server &#8212; tic-tac-toe 1.0.0 documentazione</title>
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/classic.css" />
+    
+    <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
+    <script src="../../_static/doctools.js"></script>
+    <script src="../../_static/sphinx_highlight.js"></script>
+    <script src="../../_static/translations.js"></script>
+    
+    <link rel="index" title="Indice" href="../../genindex.html" />
+    <link rel="search" title="Cerca" href="../../search.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigazione</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="Indice generale"
+             accesskey="I">indice</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Indice del modulo Python"
+             >moduli</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">tic-tac-toe 1.0.0 documentazione</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../index.html" accesskey="U">Codice del modulo</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">server.server</a></li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Codice sorgente per server.server</h1><div class="highlight"><pre>
+<span></span><span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">code author : Matteo Sepa</span>
+<span class="sd">contact : sepamatteo@protonmail.me</span>
+<span class="sd">website : sepamatteo.github.io</span>
+
+<span class="sd">Software released under GNU GPLv3 license</span>
+<span class="sd">&#39;&#39;&#39;</span>
+
+<span class="kn">import</span> <span class="nn">socket</span>
+<span class="kn">import</span> <span class="nn">threading</span>
+<span class="kn">import</span> <span class="nn">sys</span>
+
+
+<div class="viewcode-block" id="SocketConnection"><a class="viewcode-back" href="../../server.html#server.server.SocketConnection">[documenti]</a><span class="k">class</span> <span class="nc">SocketConnection</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Classe che gestisce la connessione attraverso socket&quot;&quot;&quot;</span>
+
+    <span class="c1"># Server IP and port</span>
+    <span class="n">IP</span> <span class="o">=</span> <span class="s2">&quot;127.0.0.1&quot;</span>
+    <span class="n">PORT</span> <span class="o">=</span> <span class="mi">12345</span>
+
+    <span class="n">turn</span> <span class="o">=</span> <span class="s2">&quot;x&quot;</span>
+
+    <span class="c1"># Socket type and options</span>
+    <span class="n">server_socket</span> <span class="o">=</span> <span class="n">socket</span><span class="o">.</span><span class="n">socket</span><span class="p">(</span><span class="n">family</span><span class="o">=</span><span class="n">socket</span><span class="o">.</span><span class="n">AF_INET</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="n">socket</span><span class="o">.</span><span class="n">SOCK_STREAM</span><span class="p">)</span>
+    <span class="n">server_socket</span><span class="o">.</span><span class="n">setsockopt</span><span class="p">(</span><span class="n">socket</span><span class="o">.</span><span class="n">SOL_SOCKET</span><span class="p">,</span> <span class="n">socket</span><span class="o">.</span><span class="n">SO_REUSEADDR</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+
+    <span class="n">server_socket</span><span class="o">.</span><span class="n">bind</span><span class="p">((</span><span class="n">IP</span><span class="p">,</span> <span class="n">PORT</span><span class="p">))</span>
+    <span class="n">server_socket</span><span class="o">.</span><span class="n">listen</span><span class="p">()</span>
+
+    <span class="c1"># dictionary of client sockets and their nicknames</span>
+    <span class="n">clients</span> <span class="o">=</span> <span class="p">{}</span>
+
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Listening for connections on </span><span class="si">{</span><span class="n">IP</span><span class="si">}</span><span class="s2">:</span><span class="si">{</span><span class="n">PORT</span><span class="si">}</span><span class="s2">...&quot;</span><span class="p">)</span>
+
+
+    <span class="c1"># Sending Messages To All Connected Clients</span>
+<div class="viewcode-block" id="SocketConnection.broadcast"><a class="viewcode-back" href="../../server.html#server.server.SocketConnection.broadcast">[documenti]</a>    <span class="k">def</span> <span class="nf">broadcast</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">message</span><span class="p">,</span> <span class="n">client_socket</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Metodo che invia un messaggio in broadcast a gli host connessi&quot;&quot;&quot;</span>
+        <span class="c1"># Send messages to all clients except to the original sender</span>
+        <span class="k">for</span> <span class="n">client</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">clients</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+            <span class="k">if</span> <span class="n">client</span> <span class="ow">is</span> <span class="ow">not</span> <span class="n">client_socket</span><span class="p">:</span>
+                <span class="n">client</span><span class="o">.</span><span class="n">send</span><span class="p">(</span><span class="n">message</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s2">&quot;utf-8&quot;</span><span class="p">))</span></div>
+
+
+    <span class="c1"># Function to be called per client</span>
+<div class="viewcode-block" id="SocketConnection.handle"><a class="viewcode-back" href="../../server.html#server.server.SocketConnection.handle">[documenti]</a>    <span class="k">def</span> <span class="nf">handle</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">client_socket</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Metodo che gestisce la connessione&quot;&quot;&quot;</span>
+        <span class="k">while</span> <span class="kc">True</span><span class="p">:</span>
+            <span class="n">message</span> <span class="o">=</span> <span class="n">client_socket</span><span class="o">.</span><span class="n">recv</span><span class="p">(</span><span class="mi">1024</span><span class="p">)</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="s2">&quot;utf-8&quot;</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="n">message</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">broadcast</span><span class="p">(</span><span class="n">message</span><span class="p">,</span> <span class="n">client_socket</span><span class="p">)</span>
+            <span class="k">if</span> <span class="s2">&quot;!exit&quot;</span> <span class="ow">in</span> <span class="n">message</span><span class="p">:</span>
+                <span class="n">client_socket</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+                <span class="n">broadcast</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">{}</span><span class="s2"> left!&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">clients</span><span class="p">[</span><span class="n">client_socket</span><span class="p">]),</span> <span class="n">client_socket</span><span class="p">)</span>
+                <span class="n">clients</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="n">client_socket</span><span class="p">)</span>
+                <span class="nb">print</span><span class="p">(</span><span class="n">clients</span><span class="p">)</span>
+                <span class="n">sys</span><span class="o">.</span><span class="n">exit</span><span class="p">()</span></div>
+
+
+    <span class="c1"># Receiving / Listening Function</span>
+<div class="viewcode-block" id="SocketConnection.receive"><a class="viewcode-back" href="../../server.html#server.server.SocketConnection.receive">[documenti]</a>    <span class="k">def</span> <span class="nf">receive</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Metodo che gestisce le connessioni e fa partire il thread&quot;&quot;&quot;</span>
+        <span class="k">global</span> <span class="n">turn</span>
+        <span class="k">while</span> <span class="kc">True</span><span class="p">:</span>
+            <span class="c1"># Accept Connection</span>
+            <span class="n">client_socket</span><span class="p">,</span> <span class="n">address</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">server_socket</span><span class="o">.</span><span class="n">accept</span><span class="p">()</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Connected with </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">address</span><span class="p">)))</span>
+            <span class="n">client_socket</span><span class="o">.</span><span class="n">send</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">turn</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s1">&#39;utf-8&#39;</span><span class="p">))</span>
+            <span class="n">nickname</span> <span class="o">=</span> <span class="sa">f</span><span class="s1">&#39;player </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">turn</span><span class="si">}</span><span class="s1">&#39;</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">turn</span> <span class="o">==</span> <span class="s2">&quot;x&quot;</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">turn</span> <span class="o">=</span> <span class="s2">&quot;o&quot;</span>
+            <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">turn</span> <span class="o">==</span> <span class="s2">&quot;o&quot;</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">turn</span> <span class="o">=</span> <span class="s2">&quot;x&quot;</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">clients</span><span class="o">.</span><span class="n">update</span><span class="p">({</span><span class="n">client_socket</span><span class="p">:</span> <span class="n">nickname</span><span class="p">})</span>
+
+            <span class="c1"># Start Handling Thread For Client</span>
+            
+            <span class="n">thread</span> <span class="o">=</span> <span class="n">threading</span><span class="o">.</span><span class="n">Thread</span><span class="p">(</span><span class="n">target</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">handle</span><span class="p">,</span> <span class="n">args</span><span class="o">=</span><span class="p">(</span><span class="n">client_socket</span><span class="p">,))</span>
+            <span class="n">thread</span><span class="o">.</span><span class="n">start</span><span class="p">()</span></div></div>
+
+
+<div class="viewcode-block" id="main"><a class="viewcode-back" href="../../server.html#server.server.main">[documenti]</a><span class="k">def</span> <span class="nf">main</span><span class="p">():</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Main&quot;&quot;&quot;</span>
+    <span class="n">sock</span> <span class="o">=</span> <span class="n">SocketConnection</span><span class="p">()</span>
+    <span class="n">sock</span><span class="o">.</span><span class="n">receive</span><span class="p">()</span></div>
+
+
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s1">&#39;__main__&#39;</span><span class="p">:</span>
+    <span class="n">main</span><span class="p">()</span>
+</pre></div>
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Ricerca veloce</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Vai" />
+    </form>
+    </div>
+</div>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigazione</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="Indice generale"
+             >indice</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Indice del modulo Python"
+             >moduli</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">tic-tac-toe 1.0.0 documentazione</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../index.html" >Codice del modulo</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">server.server</a></li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2023, Matteo Sepa.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 6.1.3.
+    </div>
+  </body>
+</html>
