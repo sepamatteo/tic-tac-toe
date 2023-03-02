@@ -13,7 +13,7 @@ from PySide2.QtCore import Qt
 import socket
 import threading
 import mariadb
-from datetime import datetime
+from datetime import datetime   
 
 
 
@@ -74,7 +74,7 @@ class Game(QWidget):
         self.player_label.setText("{}\nGiocatore : ".format(self.player))
 
         if self.player != self.turn:
-            self.otherPalyerTurn()
+            self.otherPlayerTurn()
 
     def initUI(self):
         """Metodo che inizializza l'interfaccia grafica"""
@@ -225,15 +225,15 @@ class Game(QWidget):
                 print("draw")
                 self.newGame()
 
-    def _otherPalyerTurn(self):
+    def _otherPlayerTurn(self):
         message = self.chat_object.receive()
         i, j = map(lambda x: int(x), message.split(" "))
         self.buttons[i][j].setText(self.turn)
         self.toggle_turn()
         self.checkGame()
 
-    def otherPalyerTurn(self):
-        threading.Thread(target=self._otherPalyerTurn).start()
+    def otherPlayerTurn(self):
+        threading.Thread(target=self._otherPlayerTurn).start()
 
     def toggle_turn(self):
         """Metodo che alterna i turni durante la partita"""
@@ -246,7 +246,7 @@ class Game(QWidget):
     def endTurn(self):
         self.toggle_turn()
         self.checkGame()
-        self.otherPalyerTurn()
+        self.otherPlayerTurn()
 
     def takeTurn(self, button: QPushButton, i, j):
         def action():
