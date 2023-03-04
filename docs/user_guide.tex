@@ -1,0 +1,53 @@
+\documentclass{article}
+\title{tic-tac-toe User Guide}
+\date{}
+\author{Matteo Sepa, Daniel Schiop, Lorenzo Muzaka, Samuel Hofer \\ Siam Islam Shomapto}
+
+% packages include
+\usepackage{hyperref}
+\usepackage{graphicx}
+% images directory path
+\graphicspath{{img}}
+
+\begin{document}
+\maketitle
+\pagenumbering{gobble}
+
+% including image
+\includegraphics[scale=5.5]{tictactoe.png}
+\centering
+
+\newpage
+\tableofcontents
+\newpage
+\pagenumbering{arabic}
+
+% requisiti
+\section{Prerequisiti}
+
+\subsection{Lista dei requisiti}
+\begin{itemize}
+    \item Python 3
+    \item MariaDB
+\end{itemize}
+
+\subsection{Lista librerie python}
+Per installare una libreria digitare il comando: \emph{pip3 install nome-libreria}
+\begin{itemize}
+    \item PySide2
+    \item Mariadb
+\end{itemize}
+
+% eseguire l'applicazione
+\newpage
+\section{Eseguire l'applicazione}
+\emph{Il seguente metodo funziona esclusivamente su macchine GNU/Linux}
+
+\subsection{Rendere lo script eseguibile}
+Per eseguire il programma basta semplicemente rendere eseguibile lo script \emph{launch.sh}
+eseguendo il comando: \textbf{\emph{chmod +x launch.sh}}
+
+\subsection{Eseguire lo script}
+In seguito per eseguire il programma basterà mandare in esecuzione il programma 
+basterà eseguire lo script con il comando: \textbf{\emph{./launch.sh}}
+\end{document}
