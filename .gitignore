@@ -1,3 +1,10 @@
 .vscode
 src/client/__pycache__
 src/server/__pycache__
+docs/user_guide.aux
+docs/user_guide.fdb_latexmk
+docs/user_guide.fls
+docs/user_guide.log
+docs/user_guide.out
+docs/user_guide.synctex.gz
+docs/user_guide.toc
