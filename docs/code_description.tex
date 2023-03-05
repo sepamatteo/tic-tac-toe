@@ -1,0 +1,105 @@
+\documentclass{article}
+\title{tic-tac-toe Code Description}
+\date{}
+\author{Matteo Sepa, Daniel Schiop, Lorenzo Muzaka, Samuel Hofer \\ Siam Islam Shomapto}
+
+% packages include
+\usepackage{hyperref}
+
+\begin{document}
+\maketitle
+\pagenumbering{gobble}
+
+\newpage
+\tableofcontents
+\newpage
+\pagenumbering{arabic}
+
+% server
+\section{Server}
+\emph{Questa pagina descrive le classi ed i metodi fondamentali del modulo Server}
+
+% classi
+\subsection{Classi}
+% socket connection
+\subsubsection{SocketConnection}
+La classe \textbf{SocketConnection} gestisce la connessione attraverso socket:\newline\newline
+La classe specifica porta ed IP del server:
+
+% code snippet
+\begin{verbatim}
+    # Server IP and port
+    IP = "127.0.0.1"
+    PORT = 12345
+\end{verbatim}
+Poi dichiara il tipo di socket e le opzioni di connessione:
+
+% code snippet
+\begin{verbatim}
+    # Socket type and options
+    server_socket = socket.socket(family=socket.AF_INET, type=socket.SOCK_STREAM)
+    server_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+
+    server_socket.bind((IP, PORT))
+    server_socket.listen()
+\end{verbatim}
+
+\newpage
+\subsection{Metodi}
+
+\subsubsection{broadcast}
+Il metodo \textbf{broadcast} invia un messaggio di conferma a tutti i client connessi:
+
+\begin{verbatim}
+    def broadcast(self, message, client_socket):
+        """Metodo che invia un messaggio in broadcast a gli host connessi"""
+        # Send messages to all clients except to the original sender
+        for client in self.clients.keys():
+            if client is not client_socket:
+                client.send(message.encode("utf-8"))
+\end{verbatim}
+
+\subsubsection{handle}
+Il metodo \textbf{handle} viene chiamata per ogni client connesso e gestisce le connessioni 
+con i client
+
+\begin{verbatim}
+    def handle(self, client_socket):
+        """Metodo che gestisce la connessione"""
+\end{verbatim}
+
+\subsubsection{receive}
+Il metodo \textbf{receive} gestisce le connessioni, i turni di gioco ed i thread per ogni client.\\
+
+Il metodo inizializza la connessione, notifica il client e setta il nickname al client:
+
+\begin{verbatim}
+    def receive(self):
+        """Metodo che gestisce le connessioni e fa partire il thread"""
+        global turn
+        while True:
+            # Accept Connection
+            client_socket, address = self.server_socket.accept()
+            print("Connected with {}".format(str(address)))
+            client_socket.send(self.turn.encode('utf-8'))
+            nickname = f'player {self.turn}'
+\end{verbatim}
+
+Poi setta il turno della partita:
+
+\begin{verbatim}
+    if self.turn == "x":
+        self.turn = "o"
+    elif self.turn == "o":
+        self.turn = "x"
+    self.clients.update({client_socket: nickname})
+\end{verbatim}
+
+In fine avvia il thread:
+
+\begin{verbatim}
+    thread = threading.Thread(target=self.handle, args=(client_socket,))
+    thread.start()
+\end{verbatim}
+
+\end{document}
