@@ -5,6 +5,7 @@
 
 % packages include
 \usepackage{hyperref}
+\usepackage[T1]{fontenc}
 
 \begin{document}
 \maketitle
@@ -47,9 +48,11 @@ Poi dichiara il tipo di socket e le opzioni di connessione:
 \newpage
 \subsection{Metodi}
 
-\subsubsection{broadcast}
-Il metodo \textbf{broadcast} invia un messaggio di conferma a tutti i client connessi:
+% broadcast
+\subsubsection{broadcast()}
+Il metodo \textbf{broadcast()} invia un messaggio di conferma a tutti i client connessi:
 
+% code snippet
 \begin{verbatim}
     def broadcast(self, message, client_socket):
         """Metodo che invia un messaggio in broadcast a gli host connessi"""
@@ -59,20 +62,24 @@ Il metodo \textbf{broadcast} invia un messaggio di conferma a tutti i client con
                 client.send(message.encode("utf-8"))
 \end{verbatim}
 
-\subsubsection{handle}
-Il metodo \textbf{handle} viene chiamata per ogni client connesso e gestisce le connessioni 
+% handle
+\subsubsection{handle()}
+Il metodo \textbf{handle()} viene chiamata per ogni client connesso e gestisce le connessioni 
 con i client
 
+% code snippet
 \begin{verbatim}
     def handle(self, client_socket):
         """Metodo che gestisce la connessione"""
 \end{verbatim}
 
-\subsubsection{receive}
-Il metodo \textbf{receive} gestisce le connessioni, i turni di gioco ed i thread per ogni client.\\
+% receive
+\subsubsection{receive()}
+Il metodo \textbf{receive()} gestisce le connessioni, i turni di gioco ed i thread per ogni client.\\
 
 Il metodo inizializza la connessione, notifica il client e setta il nickname al client:
 
+% code snippet
 \begin{verbatim}
     def receive(self):
         """Metodo che gestisce le connessioni e fa partire il thread"""
@@ -87,6 +94,7 @@ Il metodo inizializza la connessione, notifica il client e setta il nickname al 
 
 Poi setta il turno della partita:
 
+% code snippet
 \begin{verbatim}
     if self.turn == "x":
         self.turn = "o"
@@ -100,6 +108,256 @@ In fine avvia il thread:
 \begin{verbatim}
     thread = threading.Thread(target=self.handle, args=(client_socket,))
     thread.start()
+\end{verbatim}
+
+\section{Client}
+\emph{Questa pagina descrive le classi ed i metodi fondamentali del modulo Server}
+
+\subsection{Classi}
+
+\subsubsection{SocketChat}
+La classe \textbf{SocketChat} gestisce le connessioni al socket
+\newline\newline
+Metodo che inizializza la connessione:
+
+\begin{verbatim}
+    def __init__(self):
+        """Metodo che inizializza la connessione"""
+        self.nickname = ""
+        # Server Ip and Port
+        self.IP = "127.0.0.1"
+        self.PORT = 12345
+        self.client_socket = socket.socket(
+            family=socket.AF_INET, type=socket.SOCK_STREAM
+        )
+\end{verbatim}
+
+\subsubsection{Game}
+La classe \textbf{Game} contiene la logica di gioco
+\newline\newline
+L'attributo \emph{winning\char`_states} contiene le combinazioni che determinano la vincita della partita:
+
+\begin{verbatim}
+    winning_states = [
+        [(0, 0), (0, 1), (0, 2)],
+        [(1, 0), (1, 1), (1, 2)],
+        [(2, 0), (2, 1), (2, 2)],
+        [(0, 0), (1, 0), (2, 0)],
+        [(0, 1), (1, 1), (2, 1)],
+        [(0, 2), (1, 2), (2, 2)],
+        [(0, 0), (1, 1), (2, 2)],
+        [(0, 2), (1, 1), (2, 0)],
+    ]
+\end{verbatim}
+
+Inizializzazione della classe:
+
+\begin{verbatim}
+    def __init__(self):
+        super().__init__()
+        self.player = ""
+        self.turn = "x"
+        self.initUI()
+        self.p1_score = 0
+        self.p2_score = 0
+\end{verbatim}
+
+\subsection{Metodi}
+
+\subsubsection{receive()}
+Il metodo \textbf{receive()} della classe \textbf{SocketChat} riceve il messaggio dal server:
+
+\begin{verbatim}
+    def receive(self):
+        """Metodo che riceve il messaggio dal server"""
+        message = self.client_socket.recv(1024).decode("utf-8")
+        return message
+\end{verbatim}
+
+\subsubsection{write()}
+Il metodo \textbf{write()} della classe \textbf{SocketChat} invia il messaggio di conferma al server:
+
+\begin{verbatim}
+    def write(self, msg: str):
+        message = msg
+        self.client_socket.send(message.encode("utf-8"))
+\end{verbatim}
+\newpage
+
+\subsubsection{initUI()}
+Il metodo \textbf{initUI} della classe \textbf{Game} inizializza l'interfaccia grafica:
+
+\begin{verbatim}
+    def initUI(self):
+        """Metodo che inizializza l'interfaccia grafica"""
+        self.game_size = 3
+        self.buttons = [
+            [],
+            [],
+            [],
+        ]
+        grid = QGridLayout()
+        self.setLayout(grid)
+\end{verbatim}
+
+Poi crea i pulsanti:
+
+\begin{verbatim}
+    for i in range(self.game_size):
+            for j in range(self.game_size):
+                button = QPushButton()
+                button.setFixedSize(200, 200)
+                button.clicked.connect(self.takeTurn(button, i, j))
+                font = button.font()
+                font.setPointSize(60)
+                button.setFont(font)
+                grid.addWidget(button, i, j)
+                self.buttons[i].append(button)
+\end{verbatim}
+
+Ed infine assegna dei metodi ai pulsanti.
+
+\subsubsection{initDatabase()}
+Il metodo \textbf{initDatabase()} della classe \textbf{Game} crea la tebella contenente i risultati delle partite
+nel database nel caso non esistesse.
+\newline\newline
+Crea una connessione con il server di MariaDB:
+
+\begin{verbatim}
+    def initDatabase(self):
+        """Metodo che inizializza la connessione al database"""
+        # Connect to MariaDB Platform
+        conn = mariadb.connect(
+            user="tictactoeuser",
+            password="password",
+            host="localhost",
+            database="tictactoe")
+        cur = conn.cursor() 
+\end{verbatim}
+\newpage
+
+Poi crea la tabella nel caso non esistesse:
+
+\begin{verbatim}
+    statement = ("CREATE TABLE IF NOT EXISTS results ("
+            "gameID INT NOT NULL AUTO_INCREMENT PRIMARY KEY,"
+            "p1_score INT(25),"
+            "p2_score INT(25),"
+            "date DATE"
+            ");"
+            )
+            cur.execute(statement)
+            conn.commit()
+\end{verbatim}
+Ed infine chiude la connessione:
+
+\begin{verbatim}
+    conn.close()
+\end{verbatim}
+
+\subsubsection{writeToDbServer()}
+Il metodo \textbf{writeToDbServer()} della classe \textbf{Game} scrive i risultati della partita nel database
+\newline\newline
+Crea una connessione con il server di MariaDB:
+
+\begin{verbatim}
+    def initDatabase(self):
+        """Metodo che inizializza la connessione al database"""
+        # Connect to MariaDB Platform
+        conn = mariadb.connect(
+            user="tictactoeuser",
+            password="password",
+            host="localhost",
+            database="tictactoe")
+        cur = conn.cursor() 
+\end{verbatim}
+
+Poi inserisce i dati nel database:
+
+\begin{verbatim}
+    statement = (
+                "INSERT INTO results (p1_score,p2_score,date) "
+                "VALUES (%s,%s,%s)"
+                )
+            items_to_insert = (p1_score, p2_score, date)
+
+            cur.execute(statement, items_to_insert)
+            conn.commit() 
+\end{verbatim}
+
+Ed infine chiude la connessione:
+
+\begin{verbatim}
+    conn.close()
+\end{verbatim}
+\newpage
+
+\subsubsection{newGame()}
+Il metodo \textbf{newGame()} della classe \textbf{Game} fa iniziare una nuova partita azzerando i componenti dell'interfaccia grafica:
+
+\begin{verbatim}
+    def newGame(self):
+        """Metodo che fa iniziare una nuova partita"""
+        for row in self.buttons:
+            for btn in row:
+                btn.setText("")
+\end{verbatim}
+
+\subsubsection{checkGame()}
+Il metodo \textbf{chackGame()} della classe \textbf{Game} controlla lo stato della partita facendo riferimento al attributo winning\char`_states:
+
+\begin{verbatim}
+    def checkGame(self):
+        """Metodo che controlla lo stato della partita"""
+        win = ""
+        for win_state in Game.winning_states:
+\end{verbatim}
+
+Nel caso di vincita aumenta il punteggio del giocatore che ha vinto e richiama il metodo \textbf{newGame()}:
+
+\begin{verbatim}
+    win = state
+    print(f"'{win}' vince")
+    self.player_won_label.setText("{} ha vinto".format(win))
+    if win == 'x':
+        self.p1_score = self.p1_score + 1
+    else:
+        self.p2_score = self.p2_score + 1
+    self.newGame()
+\end{verbatim}
+
+Stessa cosa in caso di pareggio senza però alterare il punteggio dei giocatori.
+
+\subsubsection{otherPlayerTurn()}
+Il metodo \textbf{otherPlayerturn()} della classe \textbf{Game} avvia il thread che gestisce il turno per il prossimo giocatore:
+
+\begin{verbatim}
+    def otherPlayerTurn(self):
+        threading.Thread(target=self._otherPlayerTurn).start()
+\end{verbatim}
+\newpage
+
+\subsubsection{toggleTurn()}
+Il metodo \textbf{toggleTurn()} della classe \textbf{Game} alterna i turni durante la partita:
+
+\begin{verbatim}
+    def toggleTurn(self):
+        """Metodo che alterna i turni durante la partita"""
+        if self.turn == "x":
+            self.turn = "o"
+        else:
+            self.turn = "x"
+        self.turn_label.setText("{}\nTurn".format(self.turn))
+\end{verbatim}
+
+\subsubsection{endTurn()}
+Il metodo \textbf{endTurn()} della classe \textbf{Game} fa terminare il turno in corso:
+
+\begin{verbatim}
+    def endTurn(self):
+        self.toggleTurn()
+        self.checkGame()
+        self.otherPlayerTurn()
 \end{verbatim}
 
 \end{document}

@@ -13,12 +13,12 @@ from PySide2.QtCore import Qt
 import socket
 import threading
 import mariadb
-from datetime import datetime   
-
+from datetime import datetime
 
 
 class SocketChat:
     """Classe che gestisce la connessione al socket"""
+
     def __init__(self):
         """Metodo che inizializza la connessione"""
         self.nickname = ""
@@ -141,20 +141,20 @@ class Game(QWidget):
 
         try:
             statement = ("CREATE TABLE IF NOT EXISTS results ("
-            "gameID INT NOT NULL AUTO_INCREMENT PRIMARY KEY,"
-            "p1_score INT(25),"
-            "p2_score INT(25),"
-            "date DATE"
-            ");"
-            )
+                         "gameID INT NOT NULL AUTO_INCREMENT PRIMARY KEY,"
+                         "p1_score INT(25),"
+                         "p2_score INT(25),"
+                         "date DATE"
+                         ");"
+                         )
             cur.execute(statement)
             conn.commit()
         except mariadb.Error as e:
             print(f"Error creating table: {e}")
             sys.exit(1)
-        
+
         conn.close()
-    
+
     # method that writes the game results into a SQL database
     def writeToDbServer(self, p1_score, p2_score):
         """Metodo che scrive i dati nel database"""
@@ -173,7 +173,7 @@ class Game(QWidget):
             statement = (
                 "INSERT INTO results (p1_score,p2_score,date) "
                 "VALUES (%s,%s,%s)"
-                )
+            )
             items_to_insert = (p1_score, p2_score, date)
 
             cur.execute(statement, items_to_insert)
@@ -229,13 +229,13 @@ class Game(QWidget):
         message = self.chat_object.receive()
         i, j = map(lambda x: int(x), message.split(" "))
         self.buttons[i][j].setText(self.turn)
-        self.toggle_turn()
+        self.toggleTurn()
         self.checkGame()
 
     def otherPlayerTurn(self):
         threading.Thread(target=self._otherPlayerTurn).start()
 
-    def toggle_turn(self):
+    def toggleTurn(self):
         """Metodo che alterna i turni durante la partita"""
         if self.turn == "x":
             self.turn = "o"
@@ -244,7 +244,7 @@ class Game(QWidget):
         self.turn_label.setText("{}\nTurn".format(self.turn))
 
     def endTurn(self):
-        self.toggle_turn()
+        self.toggleTurn()
         self.checkGame()
         self.otherPlayerTurn()
 
